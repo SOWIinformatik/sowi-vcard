@@ -1,0 +1,35 @@
+<Project>
+  <PropertyGroup>
+    <!-- XML-Dokumentation für alle Projekte aktivieren -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- CS1591: Warnung für fehlende XML-Kommentare unterdrücken -->
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <!-- SOWI Informatik Metadaten -->
+    <Company>SOWI Informatik</Company>
+    <Authors>Franz Schönbächler</Authors>
+    <Copyright>© $([System.DateTime]::UtcNow.Year) SOWI Informatik, www.sowi.ch</Copyright>
+  </PropertyGroup>
+
+  <!--
+    Automatische Version bestimmen nach Schema: YY.MM.DD.Revision
+    Major    = Jahr   (2-stellig, z.B. 26)
+    Minor    = Monat  (z.B. 5)
+    Build    = Tag    (z.B. 5)
+    Revision = Minuten seit Mitternacht UTC (eindeutig pro Build, ersetzt Tages-Counter)
+  -->
+  <PropertyGroup>
+    <VersionMajor>$([System.DateTime]::UtcNow.ToString("yy"))</VersionMajor>
+    <VersionMinor>$([System.DateTime]::UtcNow.Month)</VersionMinor>
+    <VersionBuild>$([System.DateTime]::UtcNow.Day)</VersionBuild>
+    <VersionRevision>$([System.Convert]::ToInt32($([System.DateTime]::UtcNow.TimeOfDay.TotalMinutes)))</VersionRevision>
+    <!-- Assembly-Version: YY.MM.DD.MinutenRevision -->
+    <AssemblyVersion>$(VersionMajor).$(VersionMinor).$(VersionBuild).$(VersionRevision)</AssemblyVersion>
+    <!-- Datei-Version: identisch -->
+    <FileVersion>$(VersionMajor).$(VersionMinor).$(VersionBuild).$(VersionRevision)</FileVersion>
+    <!-- NuGet-Paketversion: YY.MM.DD (NuGet unterstützt nur 3 Segmente) -->
+    <Version>$(VersionMajor).$(VersionMinor).$(VersionBuild)</Version>
+    <PackageVersion>$(Version)</PackageVersion>
+    <!-- Lesbare Versions-Information inkl. Revision -->
+    <InformationalVersion>$(VersionMajor).$(VersionMinor).$(VersionBuild).$(VersionRevision)</InformationalVersion>
+  </PropertyGroup>
+</Project>

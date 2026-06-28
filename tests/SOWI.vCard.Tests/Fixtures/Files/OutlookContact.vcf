@@ -1,0 +1,16 @@
+BEGIN:VCARD
+VERSION:3.0
+PRODID:-//Microsoft Corporation//Outlook MIMEDIR//EN
+N:Müller;Hans;;;
+FN:Hans Müller
+ORG:Beispiel AG;IT
+TITLE:Projektleiter
+EMAIL;TYPE=INTERNET;CHARSET=utf-8:hans.mueller@beispiel.ch
+TEL;TYPE=WORK,VOICE:+41 44 123 45 67
+TEL;TYPE=CELL:+41 79 123 45 67
+ADR;TYPE=WORK:;;Bahnhofstrasse 1;Zürich;;8001;Schweiz
+NOTE:Interner Kontakt\nBitte vor Termin anrufen
+UID:040000008200E00074C5B7101A82E0080000000000000000001000000A1B2C3D4E5F6789012345678901234
+REV:2024-05-15T08:30:00Z
+X-MS-OL-DESIGN;CHARSET=utf-8:<card xmlns="http://schemas.microsoft.com/office/outlook/12/outlookcard.xsd">
+END:VCARD

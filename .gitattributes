@@ -1,0 +1,57 @@
+# SOWI.vCard – Git-Attributkonfiguration
+# Abgestimmt auf .editorconfig (end_of_line = crlf für C# und Konfigurationsdateien)
+
+# Standard: Textdateien automatisch erkennen und Zeilenenden normalisieren
+* text=auto
+
+# C# / .NET-Quellcode und Projektdateien (CRLF gemäss .editorconfig)
+*.cs              text eol=crlf
+*.csx             text eol=crlf
+*.vb              text eol=crlf
+*.fs              text eol=crlf
+*.fsx             text eol=crlf
+*.csproj          text eol=crlf
+*.fsproj          text eol=crlf
+*.vbproj          text eol=crlf
+*.sln             text eol=crlf
+*.slnx            text eol=crlf
+*.props           text eol=crlf
+*.targets         text eol=crlf
+*.editorconfig    text eol=crlf
+*.DotSettings     text eol=crlf
+
+# vCard-Test-Fixtures (RFC 6350: CRLF; konsistent mit Projekt-Einstellungen)
+*.vcf             text eol=crlf
+
+# Dokumentation und Konfiguration (CRLF gemäss .editorconfig)
+*.md              text eol=crlf
+*.json            text eol=crlf
+*.yml             text eol=crlf
+*.yaml            text eol=crlf
+*.xml             text eol=crlf
+*.config          text eol=crlf
+*.gitignore       text eol=crlf
+*.gitattributes   text eol=crlf
+
+# Shell-Skripte: LF für plattformübergreifende CI/CD-Kompatibilität
+*.sh              text eol=lf
+*.bash            text eol=lf
+
+# Binärdateien: keine Zeilenenden-Konvertierung, kein Text-Merge
+*.png             binary
+*.jpg             binary
+*.jpeg            binary
+*.gif             binary
+*.ico             binary
+*.webp            binary
+*.pdf             binary
+*.zip             binary
+*.nupkg           binary
+*.snupkg          binary
+*.dll             binary
+*.exe             binary
+*.pdb             binary
+
+# Generierte oder nicht sinnvoll mergbare Dateien
+*.lock            merge=binary
+package-lock.json merge=binary

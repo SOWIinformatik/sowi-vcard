@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="src/SOWI.vCard.csproj" />
+  <Project Path="tests/SOWI.vCard.Tests/SOWI.vCard.Tests.csproj" />
+</Solution>

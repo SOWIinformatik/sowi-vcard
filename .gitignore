@@ -1,0 +1,115 @@
+# SOWI.vCard – .NET 8 NuGet-Bibliothek
+
+## Build-Ausgaben
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+[Aa]rtifacts/
+[Pp]ackages/
+*.nupkg
+*.snupkg
+
+## Visual Studio / VS Code / Rider
+.vs/
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+.idea/
+*.DotSettings.user
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+## Tests und Code Coverage
+[Tt]est[Rr]esults/
+*.trx
+*.coverage
+*.coveragexml
+coverage/
+**/TestResults/
+
+## NuGet
+*.nuget.props
+*.nuget.targets
+project.lock.json
+project.fragment.lock.json
+
+## MSBuild / temporäre Dateien
+*.log
+*.tlog
+*.cache
+*.pidb
+*.svclog
+*.Build.CppClean.log
+*_i.c
+*_p.c
+*_h.h
+*.ilk
+*.meta
+*.obj
+*.iobj
+*.pch
+*.pdb
+*.ipdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*_wpftmp.csproj
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+
+## Betriebssystem
+[Tt]humbs.db
+[Tt]humbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+## Secrets und lokale Konfiguration
+*.env
+*.env.*
+!.env.example
+secrets.json
+**/appsettings.Development.json
+**/appsettings.Local.json
+nuget.config.user
+
+## JetBrains Rider
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+## Sonstiges
+*.bak
+*.swp
+*~
+*.orig

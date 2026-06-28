@@ -1,0 +1,95 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+
+
+  <PropertyGroup>
+
+    <TargetFramework>net8.0</TargetFramework>
+
+    <RootNamespace>SOWI.vCard</RootNamespace>
+
+    <AssemblyName>SOWI.vCard</AssemblyName>
+
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <Nullable>enable</Nullable>
+
+    <ApplicationIcon>SOWI.ico</ApplicationIcon>
+
+  </PropertyGroup>
+
+
+
+  <!-- NuGet-Paketmetadaten (Version über Directory.Build.props) -->
+
+  <PropertyGroup>
+
+    <PackageId>SOWI.vCard</PackageId>
+
+    <Title>SOWI.vCard</Title>
+
+    <Product>SOWI.vCard</Product>
+
+    <Description>.NET-Bibliothek zum Parsen und Serialisieren von vCard-Dateien (Versionen 2.1, 3.0 und 4.0 gemäss RFC 6350).</Description>
+
+    <PackageTags>vcard vcf rfc6350 parser serializer contact sowi</PackageTags>
+
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+    <PackageProjectUrl>https://github.com/SOWIinformatik/sowi-vcard</PackageProjectUrl>
+
+    <RepositoryUrl>https://github.com/SOWIinformatik/sowi-vcard</RepositoryUrl>
+
+    <RepositoryType>git</RepositoryType>
+
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <PackageIcon>SOWI.png</PackageIcon>
+
+    <IsPackable>true</IsPackable>
+
+    <PackageOutputPath>..\..\Packages</PackageOutputPath>
+
+    <IncludeSymbols>true</IncludeSymbols>
+
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+  </PropertyGroup>
+
+
+
+  <ItemGroup>
+
+    <None Remove="Resources\Portrait.jpg" />
+
+  </ItemGroup>
+
+
+
+  <ItemGroup>
+
+    <EmbeddedResource Include="Resources\Portrait.jpg" />
+
+    <Content Include="Resources\Portrait.jpg">
+
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+
+    </Content>
+
+    <Content Include="SOWI.ico" />
+
+    <None Include="..\README.md" Pack="true" PackagePath="\" Link="README.md" />
+
+    <None Include="..\LICENSE.md" Pack="true" PackagePath="\" Link="LICENSE.md" />
+
+    <None Include="SOWI.png" Pack="true" PackagePath="\" />
+
+  </ItemGroup>
+
+
+
+</Project>
+
+
