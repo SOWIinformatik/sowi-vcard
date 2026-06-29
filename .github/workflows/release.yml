@@ -8,10 +8,6 @@ on:
         required: false
         type: string
 
-permissions:
-  actions: read
-  contents: read
-
 jobs:
   resolve-run:
     runs-on: ubuntu-latest
@@ -38,6 +34,10 @@ jobs:
     needs: resolve-run
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
     steps:
       - name: NuGet-Artefakt laden
         uses: actions/download-artifact@v4
@@ -51,9 +51,13 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: NuGet login (OIDC)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ vars.NUGET_USER }}
+
       - name: Push to NuGet
-        env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
           shopt -s nullglob
           packages=(./**/*.nupkg)
@@ -66,9 +70,9 @@ jobs:
           fi
 
           for pkg in "${packages[@]}"; do
-            dotnet nuget push "$pkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+            dotnet nuget push "$pkg" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
           done
 
           for sym in "${symbols[@]}"; do
-            dotnet nuget push "$sym" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+            dotnet nuget push "$sym" --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
           done

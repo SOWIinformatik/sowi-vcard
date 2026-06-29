@@ -37,7 +37,7 @@ SOWI Informatik, www.sowi.ch · Franz Schönbächler
 | **NuGet.org** | Öffentliches Paket-Repository für Release-Versionen |
 | **GitHub Packages** | Optionales internes oder Pre-Release-Feed |
 | **Artefakt-Speicher** | GitHub Actions Artifacts (`.nupkg`, `.snupkg`) |
-| **Secrets Management** | GitHub Secrets (NuGet-API-Key, ggf. GitHub Packages Token) |
+| **Secrets Management** | GitHub Repository Variables; NuGet Trusted Publishing (OIDC, kein langlebiger API-Key) |
 | **Release Management** | Manuelle Freigabe vor Produktiv-Veröffentlichung |
 | **Unit Tests** | Prüfung einzelner Komponenten (Parser, Serializer, Domain) |
 | **Integrationstests** | Round-Trip, README-Beispiele, Outlook-/Apple-Fixtures |
@@ -164,13 +164,26 @@ SOWI.vCard ist eine Bibliothek **ohne** Laufzeit-Konfigurationsdateien (`appsett
 | Typ | Verwaltung |
 | --- | ---------- |
 | Build-/Paketmetadaten | `Directory.Build.props`, `SOWI.vCard.csproj` |
-| NuGet-API-Key | GitHub Secret `NUGET_API_KEY` |
+| NuGet-Benutzername | GitHub Repository Variable `NUGET_USER` (Profilname, kein Secret) |
+| NuGet-Publish (CI) | Trusted Publishing auf nuget.org (OIDC via `NuGet/login@v1`) |
+| NuGet-Publish (lokal) | Optional: persönlicher API-Key auf nuget.org (nicht im Repository) |
 | GitHub Packages Token | GitHub Secret `GITHUB_TOKEN` (falls internes Feed) |
 | Code-Stil | `.editorconfig` (im Repository) |
 
+**Trusted Publishing (nuget.org)**
+
+| Policy-Feld | Wert |
+| ----------- | ---- |
+| Package owner | SOWI |
+| Repository | `SOWIinformatik/sowi-vcard` |
+| Workflow | `release.yml` |
+| Environment | `production` |
+
+Der Release-Workflow tauscht ein GitHub-OIDC-Token gegen einen **kurzlebigen** NuGet-API-Key. Ein dauerhafter `NUGET_API_KEY` in GitHub Secrets ist **nicht** erforderlich.
+
 **Anforderungen**
 
-- API-Keys und Tokens **niemals** im Repository speichern.
+- Langlebige API-Keys und Tokens **niemals** im Repository speichern.
 - Paketmetadaten (`PackageId`, `RepositoryUrl`, Lizenz) im `.csproj` pflegen.
 - Änderungen an Metadaten über Pull Request und Review.
 
@@ -235,7 +248,8 @@ Die Entscheidung über Deprecation und Hotfix erfolgt **manuell**.
 
 | Thema | Vorgabe |
 | ----- | ------- |
-| NuGet-API-Key | Als GitHub Secret, nur Release-Workflow |
+| NuGet-Publish | Trusted Publishing (OIDC), Policy auf Repository/Workflow/Environment beschränkt |
+| NuGet-Benutzername | Repository Variable `NUGET_USER`, kein Secret |
 | Quellcode | MIT-Lizenz, öffentliches GitHub-Repository |
 | Veröffentlichung | Ausschliesslich über Release-Pipeline |
 | Abhängigkeiten | Keine Runtime-Abhängigkeiten in der Bibliothek |
@@ -416,7 +430,7 @@ flowchart TD
 
 1. Freigegebenes Artefakt aus erfolgreichem Main-Build auswählen.
 2. Release-Workflow manuell starten (mit Freigabe).
-3. Veröffentlichung auf nuget.org via `NUGET_API_KEY`.
+3. Veröffentlichung auf nuget.org via Trusted Publishing (`NuGet/login@v1`, Environment `production`).
 4. Verfügbarkeit unter [nuget.org/packages/SOWI.vCard](https://www.nuget.org/packages/SOWI.vCard) prüfen.
 5. Release in GitHub Releases dokumentieren (Version, Commit, Änderungen).
 
@@ -588,29 +602,36 @@ jobs:
           path: ./artifacts/*.nupkg
 ```
 
-**Beispiel: Release-Workflow (Auszug)**
+**Beispiel: Release-Workflow (Auszug, Trusted Publishing)**
 
 ```yaml
-name: Release
-
-on:
-  workflow_dispatch:
-
 jobs:
   publish:
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: nuget-package
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ needs.resolve-run.outputs.run_id }}
 
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
+      - name: NuGet login (OIDC)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ vars.NUGET_USER }}
+
       - name: Push to NuGet
-        run: dotnet nuget push ./*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        run: dotnet nuget push ./*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
 ```
 
 ---
@@ -653,19 +674,19 @@ flowchart TD
 | 2 | Testprojekt mit xUnit, coverlet | Erledigt |
 | 3 | NuGet-Metadaten in `.csproj` | Erledigt |
 | 4 | Branch Protection auf GitHub konfigurieren | Offen |
-| 5 | GitHub Secret `NUGET_API_KEY` anlegen | Offen |
-| 6 | Pull-Request-Pipeline (`ci-pr.yml`) | Offen |
-| 7 | Main-Pipeline mit Pack + Artefakt | Offen |
-| 8 | Release-Pipeline mit manueller Freigabe | Offen |
+| 5 | Trusted Publishing auf nuget.org + Variable `NUGET_USER` | Erledigt |
+| 6 | CI-Pipeline (`.github/workflows/ci.yml`) | Erledigt |
+| 7 | Release-Pipeline mit Trusted Publishing | Erledigt |
+| 8 | Environment `production` mit Freigabe | Offen |
 | 9 | GitHub Releases / Changelog-Prozess | Offen |
 | 10 | Dependabot für Test-Abhängigkeiten | Optional |
 
 **Priorisierung**
 
-1. Pull-Request-Pipeline (Build + Tests)
-2. Main-Pipeline (Pack + Artefakt)
-3. Release-Pipeline (NuGet-Publish)
-4. Branch Protection und Secrets
+1. Branch Protection auf `main`
+2. Environment `production` (Required reviewers)
+3. Erster Release-Test (Workflow `Release`)
+4. GitHub Release / Changelog
 5. Dependabot / Security Scan
 
 ---
