@@ -1,6 +1,6 @@
 # SOWI.vCard
 
-**.NET-Bibliothek zum Parsen und Serialisieren von vCard-Dateien** (`.vcf`) — Versionen **2.1**, **3.0** und **4.0** gemäss [RFC 6350](https://www.rfc-editor.org/rfc/rfc6350.html).
+**.NET-Bibliothek zum Parsen und Serialisieren von vCard-Dateien** (`.vcf`) — Versionen **2.1**, **3.0** und **4.0** (v4.0 gemäss [RFC 6350](https://www.rfc-editor.org/rfc/rfc6350.html), ältere Formate mit versionsspezifischen Strategien).
 
 Entwickelt von [SOWI Informatik](https://www.sowi.ch).
 
@@ -18,9 +18,9 @@ SOWI.vCard ist eine schlanke Format-Bibliothek ohne externe Abhängigkeiten. Sie
 | -------- | ------------ |
 | **Parsen** | vCard-String, Stream oder Datei → `VCard`-Objekt |
 | **Serialisieren** | `VCard`-Objekt → RFC-konformen Text |
-| **Mehrfach-vCards** | Dokumente mit mehreren `BEGIN:VCARD`-Blöcken |
+| **Mehrfach-vCards** | Dokumente mit mehreren `BEGIN:VCARD`-Blöcken (`ParseDocument` / `SerializeDocument`) |
 | **Versionen** | 2.1, 3.0, 4.0 mit versionsspezifischen Strategien |
-| **Erweiterbar** | `X-`-Properties und unbekannte Felder werden erhalten |
+| **Erweiterbar** | `X-`-Properties → `VCard.Extensions`; unbekannte Standard-Properties → `VCard.Others` |
 
 ---
 
@@ -36,14 +36,16 @@ dotnet add package SOWI.vCard
 
 ```bash
 git clone https://github.com/SOWIinformatik/sowi-vcard.git
-cd SOWI.vCard
-dotnet build
-dotnet test
+cd sowi-vcard
+dotnet build SOWI.vCard.slnx
+dotnet test SOWI.vCard.slnx
 ```
 
 ---
 
 ## Schnellstart
+
+Empfohlener Einstiegspunkt: `VCardService.CreateDefault()`.
 
 ```csharp
 using SOWI.vCard.Abstractions;
@@ -51,7 +53,7 @@ using SOWI.vCard.Services;
 
 IVCardService service = VCardService.CreateDefault();
 
-// Parsen
+// Parsen (String)
 string vCardText = await File.ReadAllTextAsync("kontakt.vcf");
 var card = service.Parse(vCardText);
 
@@ -64,10 +66,24 @@ string output = service.Serialize(card);
 await File.WriteAllTextAsync("kontakt-export.vcf", output);
 ```
 
+Alternativ direkt über die Fassade (async Datei-I/O):
+
+```csharp
+var cardFromFile = await service.ParseFileAsync("kontakt.vcf");
+await service.SerializeToFileAsync(cardFromFile, "kontakt-export.vcf");
+```
+
 ### Mehrere vCards in einer Datei
 
 ```csharp
-IReadOnlyList<VCard> cards = service.ParseDocument(vCardText);
+using SOWI.vCard.Abstractions;
+using SOWI.vCard.Domain;
+using SOWI.vCard.Services;
+
+IVCardService service = VCardService.CreateDefault();
+string document = await File.ReadAllTextAsync("adressbuch.vcf");
+
+IReadOnlyList<VCard> cards = service.ParseDocument(document);
 string merged = service.SerializeDocument(cards);
 ```
 
@@ -76,6 +92,7 @@ string merged = service.SerializeDocument(cards);
 ```csharp
 using SOWI.vCard.Domain;
 using SOWI.vCard.Domain.ValueObjects;
+using SOWI.vCard.Services;
 
 var card = new VCard
 {
@@ -92,30 +109,45 @@ string vCardText = VCardService.CreateDefault().Serialize(card);
 ### Dependency Injection
 
 ```csharp
+using SOWI.vCard.Abstractions;
+using SOWI.vCard.Parsing;
+using SOWI.vCard.Serialization;
+using SOWI.vCard.Services;
+
 services.AddSingleton<IVCardLineReader, VCardLineReader>();
 services.AddSingleton<IVCardParser, VCardParser>();
 services.AddSingleton<IVCardSerializer, VCardSerializer>();
 services.AddSingleton<IVCardService, VCardService>();
 ```
 
-Weitere Beispiele (Photo-Provider, async Datei-I/O): [`src/README.md`](src/README.md).
+Weitere Beispiele (Photo-Provider, Stream-I/O): [`src/README.md`](src/README.md).
 
 ---
 
 ## Projektstruktur
 
 ```text
-SOWI.vCard/
+sowi-vcard/                         # GitHub-Repository (Projektname: SOWI.vCard)
+├── .github/workflows/
+│   ├── ci.yml                      # Build, Test, Pack (Artefakte)
+│   └── release.yml                 # Manuell: NuGet-Publish
 ├── src/
-│   ├── Domain/           # VCard-Aggregat und Value Objects
-│   ├── Abstractions/     # IVCardParser, IVCardSerializer, IVCardService
-│   ├── Parsing/          # RFC-Parser, Property-Handler, Version-Strategien
-│   ├── Serialization/    # Serializer und Property-Writer
-│   └── Services/         # VCardService (Fassade)
+│   ├── SOWI.vCard.csproj
+│   ├── Domain/                     # VCard-Aggregat, Value Objects, Exceptions
+│   ├── Abstractions/               # IVCardParser, IVCardSerializer, IVCardService, …
+│   ├── Parsing/                    # Parser, PropertyHandlers, VersionStrategies
+│   ├── Serialization/              # VCardSerializer, VCardPropertyWriters
+│   ├── Services/                   # VCardService (Fassade), FilePhotoDataProvider
+│   └── README.md                   # RFC-Property-Referenz
 ├── tests/
-│   └── SOWI.vCard.Tests/ # Unit- und Integrationstests
-└── docs/
-    └── SOWI.vCard.Architecture.md
+│   └── SOWI.vCard.Tests/           # Unit- und Integrationstests
+├── docs/
+│   ├── SOWI.vCard.Architecture.md
+│   └── SOWI.vCard.CICD.md
+├── Directory.Build.props
+├── SOWI.vCard.slnx
+├── LICENSE.md
+└── .editorconfig
 ```
 
 ---
@@ -127,11 +159,13 @@ SOWI.vCard/
 dotnet build SOWI.vCard.slnx
 
 # Tests ausführen
-dotnet test
+dotnet test SOWI.vCard.slnx
 
-# NuGet-Paket erstellen (Ausgabe: ../Packages/)
+# NuGet-Paket lokal erstellen (Ausgabe: ../Packages/)
 dotnet pack src/SOWI.vCard.csproj -c Release
 ```
+
+CI-Pipeline (GitHub Actions) und Release-Prozess: [`docs/SOWI.vCard.CICD.md`](docs/SOWI.vCard.CICD.md).
 
 ---
 
@@ -140,7 +174,7 @@ dotnet pack src/SOWI.vCard.csproj -c Release
 | Dokument | Inhalt |
 | -------- | ------ |
 | [`src/README.md`](src/README.md) | RFC-Property-Referenz, vCard-Beispiele, API-Details |
-| [`docs/SOWI.vCard.Architecture.md`](docs/SOWI.vCard.Architecture.md) | Architektur, Design-Patterns, Coding Standards |
+| [`docs/SOWI.vCard.Architecture.md`](docs/SOWI.vCard.Architecture.md) | Ist-Architektur, Design-Prinzipien, Coding Standards |
 | [`docs/SOWI.vCard.CICD.md`](docs/SOWI.vCard.CICD.md) | CI/CD, Versionierung, Release-Prozess |
 
 ---

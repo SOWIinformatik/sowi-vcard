@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      ci_run_id:
+        description: 'Optional: Run-ID der CI-Pipeline (leer = letzter erfolgreicher Lauf auf main)'
+        required: false
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  resolve-run:
+    runs-on: ubuntu-latest
+    outputs:
+      run_id: ${{ steps.resolve.outputs.run_id }}
+    steps:
+      - name: Run-ID ermitteln
+        id: resolve
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -n "${{ github.event.inputs.ci_run_id }}" ]; then
+            echo "run_id=${{ github.event.inputs.ci_run_id }}" >> "$GITHUB_OUTPUT"
+          else
+            run_id=$(gh run list --repo "${{ github.repository }}" --workflow=ci.yml --branch=main --status=success --limit=1 --json databaseId --jq '.[0].databaseId')
+            if [ -z "$run_id" ] || [ "$run_id" = "null" ]; then
+              echo "Kein erfolgreicher CI-Lauf auf main gefunden." >&2
+              exit 1
+            fi
+            echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+          fi
+
+  publish:
+    needs: resolve-run
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: NuGet-Artefakt laden
+        uses: actions/download-artifact@v4
+        with:
+          name: nuget-package
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ needs.resolve-run.outputs.run_id }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Push to NuGet
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          shopt -s nullglob
+          packages=(./**/*.nupkg)
+          symbols=(./**/*.snupkg)
+
+          if [ ${#packages[@]} -eq 0 ]; then
+            echo "Kein .nupkg im Artefakt gefunden." >&2
+            find .
+            exit 1
+          fi
+
+          for pkg in "${packages[@]}"; do
+            dotnet nuget push "$pkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          done
+
+          for sym in "${symbols[@]}"; do
+            dotnet nuget push "$sym" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          done
