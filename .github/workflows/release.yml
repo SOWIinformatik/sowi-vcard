@@ -60,8 +60,8 @@ jobs:
       - name: Push to NuGet
         run: |
           shopt -s nullglob
-          packages=(./**/*.nupkg)
-          symbols=(./**/*.snupkg)
+          packages=(./*.nupkg)
+          symbols=(./*.snupkg)
 
           if [ ${#packages[@]} -eq 0 ]; then
             echo "Kein .nupkg im Artefakt gefunden." >&2
