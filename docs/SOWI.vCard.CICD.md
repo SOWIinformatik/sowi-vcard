@@ -67,7 +67,8 @@ SOWI.vCard/
 ├── scripts/
 │   └── github/
 │       ├── branch-protection-ruleset.json
-│       └── Apply-BranchProtection.ps1
+│       ├── Apply-BranchProtection.ps1
+│       └── New-GitHubRelease.ps1
 ├── src/
 │   └── SOWI.vCard.csproj          # Bibliothek (net8.0, packable)
 ├── tests/
@@ -78,6 +79,7 @@ SOWI.vCard/
 ├── Directory.Build.props          # Versionierung, SOWI-Metadaten
 ├── SOWI.vCard.slnx
 ├── README.md
+├── CHANGELOG.md
 ├── LICENSE.md
 └── .editorconfig
 ```
@@ -435,7 +437,7 @@ flowchart TD
 2. Release-Workflow manuell starten (mit Freigabe).
 3. Veröffentlichung auf nuget.org via Trusted Publishing (`NuGet/login@v1`, Environment `production`).
 4. Verfügbarkeit unter [nuget.org/packages/SOWI.vCard](https://www.nuget.org/packages/SOWI.vCard) prüfen.
-5. Release in GitHub Releases dokumentieren (Version, Commit, Änderungen).
+5. Release in GitHub Releases dokumentieren: `CHANGELOG.md` ergänzen, `New-GitHubRelease.ps1` ausführen (siehe Anhang F).
 
 **Release-Checkliste**
 
@@ -663,7 +665,7 @@ flowchart TD
 | 6 | CI-Pipeline (`.github/workflows/ci.yml`) | Erledigt |
 | 7 | Release-Pipeline mit Trusted Publishing | Erledigt |
 | 8 | Environment `production` (ohne Required reviewers, Solo) | Erledigt |
-| 9 | GitHub Releases / Changelog-Prozess | Offen |
+| 9 | GitHub Releases / Changelog-Prozess | Erledigt |
 | 10 | Dependabot für Test-Abhängigkeiten | Optional |
 
 **Environment `production` (Ist-Stand GitHub)**
@@ -683,7 +685,7 @@ Ab zweitem Maintainer können Required reviewers auf dem Environment ergänzt we
 1. ~~Branch Protection auf `main`~~ — erledigt
 2. ~~Environment `production`~~ — erledigt (ohne Required reviewers)
 3. ~~Erster Release-Test (Workflow `Release`)~~ — erledigt
-4. GitHub Release / Changelog
+4. ~~GitHub Release / Changelog~~ — erledigt
 5. Dependabot / Security Scan (optional)
 
 **Release-Test (Ist-Stand)**
@@ -765,11 +767,55 @@ Trockenlauf ohne Änderung:
 
 ---
 
+### Anhang F – GitHub Releases und Changelog
+
+**Auslegung:** Release Notes in `CHANGELOG.md` (Keep a Changelog); Git-Tag entspricht der NuGet-`PackageVersion` (`YY.MM.DD`). GitHub Release dokumentiert den veröffentlichten Stand; der Tag zeigt auf den Commit des CI-Artefakts, das nach nuget.org gepusht wurde.
+
+**Dateien**
+
+| Datei | Zweck |
+| ----- | ----- |
+| `CHANGELOG.md` | Versionshistorie und Release Notes |
+| `scripts/github/New-GitHubRelease.ps1` | Release aus Changelog-Abschnitt erstellen |
+
+**Ablauf nach NuGet-Publish**
+
+1. Abschnitt `## [YY.M.DD]` in `CHANGELOG.md` pflegen (Hinzugefügt, Geändert, Veröffentlichung).
+2. Änderung per Pull Request nach `main` mergen.
+3. NuGet-Workflow `Release` ausführen (falls noch nicht geschehen).
+4. Commit des CI-Artefakts ermitteln (Run-ID aus GitHub Actions).
+5. GitHub Release erstellen:
+
+```powershell
+.\scripts\github\New-GitHubRelease.ps1 -Version 26.6.30 -TargetCommit <commit-sha>
+```
+
+Trockenlauf: `-WhatIf` · Entwurf: `-Draft`
+
+**Tag-Konvention**
+
+| Feld | Wert |
+| ---- | ---- |
+| Tag-Name | `26.6.30` (identisch mit NuGet-Version) |
+| Titel | `SOWI.vCard 26.6.30` |
+| Target | Commit des gepushten CI-Artefakts |
+
+**Erstes GitHub Release**
+
+| Eigenschaft | Wert |
+| ----------- | ---- |
+| Version | `26.6.30` |
+| Target-Commit | `e5cd8a4` (CI-Run `28440937500`, veröffentlichtes Artefakt) |
+| NuGet | [26.6.30](https://www.nuget.org/packages/SOWI.vCard/26.6.30) |
+
+---
+
 ## Verwandte Dokumentation
 
 | Dokument | Inhalt |
 | -------- | ------ |
 | [`README.md`](../README.md) | Installation, Schnellstart, lokaler Build |
+| [`CHANGELOG.md`](../CHANGELOG.md) | Versionshistorie und Release Notes |
 | [`SOWI.vCard.Architecture.md`](SOWI.vCard.Architecture.md) | Architektur, Tests, Coding Standards |
 | [`src/README.md`](../src/README.md) | RFC-Property-Referenz, API-Details |
 | SOWI CI/CD-Standard | Generische Vorlage (intern) |
