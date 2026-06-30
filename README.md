@@ -173,6 +173,7 @@ CI-Pipeline (GitHub Actions) und Release-Prozess: [`docs/SOWI.vCard.CICD.md`](do
 
 | Dokument | Inhalt |
 | -------- | ------ |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Mitwirken, Issues, Pull Requests |
 | [`src/README.md`](src/README.md) | RFC-Property-Referenz, vCard-Beispiele, API-Details |
 | [`docs/SOWI.vCard.Architecture.md`](docs/SOWI.vCard.Architecture.md) | Ist-Architektur, Design-Prinzipien, Coding Standards |
 | [`docs/SOWI.vCard.CICD.md`](docs/SOWI.vCard.CICD.md) | CI/CD, Versionierung, Release-Prozess |
