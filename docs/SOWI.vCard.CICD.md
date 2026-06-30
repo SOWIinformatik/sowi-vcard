@@ -682,9 +682,20 @@ Ab zweitem Maintainer können Required reviewers auf dem Environment ergänzt we
 
 1. ~~Branch Protection auf `main`~~ — erledigt
 2. ~~Environment `production`~~ — erledigt (ohne Required reviewers)
-3. Erster Release-Test (Workflow `Release`)
+3. ~~Erster Release-Test (Workflow `Release`)~~ — erledigt
 4. GitHub Release / Changelog
 5. Dependabot / Security Scan (optional)
+
+**Release-Test (Ist-Stand)**
+
+| Eigenschaft | Wert |
+| ----------- | ---- |
+| Erster erfolgreicher Lauf | 29.06.2026 (Run `28351585999`) |
+| Letzter Testlauf | 30.06.2026 (Run [28441095511](https://github.com/SOWIinformatik/sowi-vcard/actions/runs/28441095511)) |
+| CI-Artefakt-Quelle | Run `28440937500` (main) |
+| Veröffentlichte Version | `26.6.30` auf [nuget.org](https://www.nuget.org/packages/SOWI.vCard) |
+| Symbol-Paket | `.snupkg` mitveröffentlicht |
+| Trusted Publishing | OIDC via Environment `production` |
 
 ---
 
