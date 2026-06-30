@@ -183,6 +183,8 @@ SOWI.vCard ist eine Bibliothek **ohne** Laufzeit-Konfigurationsdateien (`appsett
 
 Der Release-Workflow tauscht ein GitHub-OIDC-Token gegen einen **kurzlebigen** NuGet-API-Key. Ein dauerhafter `NUGET_API_KEY` in GitHub Secrets ist **nicht** erforderlich.
 
+Das GitHub-Environment `production` ist für Trusted Publishing erforderlich. Bei Solo-Maintainer entfällt **Required reviewers** auf dem Environment; die Freigabe erfolgt durch den **manuellen Start** des Release-Workflows (`workflow_dispatch`).
+
 **Anforderungen**
 
 - Langlebige API-Keys und Tokens **niemals** im Repository speichern.
@@ -660,17 +662,29 @@ flowchart TD
 | 5 | Trusted Publishing auf nuget.org + Variable `NUGET_USER` | Erledigt |
 | 6 | CI-Pipeline (`.github/workflows/ci.yml`) | Erledigt |
 | 7 | Release-Pipeline mit Trusted Publishing | Erledigt |
-| 8 | Environment `production` mit Freigabe | Offen |
+| 8 | Environment `production` (ohne Required reviewers, Solo) | Erledigt |
 | 9 | GitHub Releases / Changelog-Prozess | Offen |
 | 10 | Dependabot für Test-Abhängigkeiten | Optional |
 
+**Environment `production` (Ist-Stand GitHub)**
+
+| Eigenschaft | Wert |
+| ----------- | ---- |
+| Name | `production` |
+| URL | [Environment-Einstellungen](https://github.com/SOWIinformatik/sowi-vcard/settings/environments) |
+| Required reviewers | Keine (`protection_rules` leer) |
+| Freigabe (Solo) | Manueller Start Workflow `Release` |
+| Verwendung | `release.yml` → Trusted Publishing (OIDC) |
+
+Ab zweitem Maintainer können Required reviewers auf dem Environment ergänzt werden.
+
 **Priorisierung**
 
-1. Branch Protection auf `main`
-2. Environment `production` (Required reviewers)
+1. ~~Branch Protection auf `main`~~ — erledigt
+2. ~~Environment `production`~~ — erledigt (ohne Required reviewers)
 3. Erster Release-Test (Workflow `Release`)
 4. GitHub Release / Changelog
-5. Dependabot / Security Scan
+5. Dependabot / Security Scan (optional)
 
 ---
 
