@@ -283,7 +283,7 @@ flowchart LR
 | Review-Konversationen gelöst | Ja | Erforderlich |
 | Kein Force-Push / kein Löschen von `main` | Ja | Erforderlich |
 | Code Review (Approval) | Nein | Empfohlen bei Team; bei externen PRs prüft der Maintainer vor dem Merge |
-| Branch up-to-date vor Merge | Nein | Optional; bei parallelen PRs oder mehreren Maintainers wieder aktivieren |
+| Branch up-to-date vor Merge | Nein | Optional; bei parallelen PRs oder mehreren Maintainer wieder aktivieren |
 
 ---
 
