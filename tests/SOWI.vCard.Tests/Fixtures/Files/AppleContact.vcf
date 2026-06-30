@@ -1,0 +1,14 @@
+BEGIN:VCARD
+VERSION:3.0
+PRODID:-//Apple Inc.//macOS 14.5//EN
+N:Schmid;Anna;Marie;;
+FN:Anna Marie Schmid
+BDAY:1990-04-12
+EMAIL;TYPE=INTERNET;TYPE=HOME:anna.schmid@example.com
+TEL;TYPE=IPHONE:+41 79 555 12 34
+ADR;TYPE=HOME;TYPE=pref:;;Seestrasse 5;Bern;;3000;Schweiz
+URL;TYPE=pref:http://www.example.com
+NOTE:Erstellt in Kontakte
+X-ABUID:ABCD1234-5678-90EF-GHIJ-KLMNOPQRSTUV
+X-APPLE-OMU-URL:https://example.com/card
+END:VCARD
