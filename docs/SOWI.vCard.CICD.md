@@ -60,6 +60,14 @@ SOWI Informatik, www.sowi.ch · Franz Schönbächler
 
 ```text
 SOWI.vCard/
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                 # PR + main: Build, Test; Pack/Artefakt auf main
+│       └── release.yml            # Manuell: NuGet-Publish
+├── scripts/
+│   └── github/
+│       ├── branch-protection-ruleset.json
+│       └── Apply-BranchProtection.ps1
 ├── src/
 │   └── SOWI.vCard.csproj          # Bibliothek (net8.0, packable)
 ├── tests/
@@ -74,18 +82,12 @@ SOWI.vCard/
 └── .editorconfig
 ```
 
-**Geplante Ergänzungen gemäss SOWI CI/CD-Vorlage**
+**Optionale Ergänzungen**
 
 ```text
 SOWI.vCard/
-├── .github/
-│   └── workflows/
-│       ├── ci-pr.yml              # Pull Request: Build + Test
-│       ├── ci-main.yml            # Merge main: Build + Test + Pack + Artefakt
-│       └── release.yml            # Manuell: NuGet-Publish
-├── pipelines/                     # Optionale Azure-DevOps-Pipelines (falls parallel)
-└── scripts/
-    └── pack/                      # Lokale Hilfsskripte (optional)
+├── pipelines/                     # Azure-DevOps-Pipelines (falls parallel)
+└── scripts/pack/                  # Lokale Hilfsskripte
 ```
 
 Repository: [https://github.com/SOWIinformatik/sowi-vcard](https://github.com/SOWIinformatik/sowi-vcard)
@@ -185,7 +187,7 @@ Der Release-Workflow tauscht ein GitHub-OIDC-Token gegen einen **kurzlebigen** N
 
 - Langlebige API-Keys und Tokens **niemals** im Repository speichern.
 - Paketmetadaten (`PackageId`, `RepositoryUrl`, Lizenz) im `.csproj` pflegen.
-- Änderungen an Metadaten über Pull Request und Review.
+- Änderungen an Metadaten über Pull Request (Review bei Team bzw. vor Merge bei externen Beiträgen).
 
 ---
 
@@ -193,14 +195,14 @@ Der Release-Workflow tauscht ein GitHub-OIDC-Token gegen einen **kurzlebigen** N
 
 **Qualitäts-Gate**
 
-Ein Merge nach `main` ist nur zulässig, wenn Build und Tests erfolgreich sind und mindestens ein Review vorliegt.
+Ein Merge nach `main` ist nur zulässig, wenn der Pull Request die Branch-Protection-Regeln erfüllt (u. a. grüner CI-Status `build`).<br>Code Review ist **nicht technisch erzwungen** (Solo-Maintainer); bei externen Beiträgen erfolgt die Prüfung durch den Maintainer vor dem Merge.
 
 | Prüfung | Status | Zweck |
 | ------- | ------ | ----- |
-| Build (`Release`) | Pflicht | Kompilierbarkeit, XML-Docs |
-| Unit Tests | Pflicht | Parser, Serializer, Domain, Services |
-| Integrationstests | Pflicht | Round-Trip, RFC-Beispiele, Fixtures |
-| Code Review | Pflicht | Qualität und Nachvollziehbarkeit |
+| Build (`Release`) | Pflicht (CI) | Kompilierbarkeit, XML-Docs |
+| Unit Tests | Pflicht (CI) | Parser, Serializer, Domain, Services |
+| Integrationstests | Pflicht (CI) | Round-Trip, RFC-Beispiele, Fixtures |
+| Code Review | Empfohlen | Qualität und Nachvollziehbarkeit; Pflicht ab zweitem Maintainer |
 | Security Scan | Optional | Dependabot, `dotnet list package --vulnerable` |
 | Code Coverage | Optional | coverlet (bereits im Testprojekt) |
 
@@ -217,9 +219,9 @@ Ein Merge nach `main` ist nur zulässig, wenn Build und Tests erfolgreich sind u
 
 | Phase | Prüfungen |
 | ----- | --------- |
-| Pull Request nach `main` | Build, Unit Tests, Integrationstests, Review |
+| Pull Request nach `main` | Build, Unit Tests, Integrationstests (CI); Review bei Bedarf |
 | Pre-Release (optional) | Manuelle Verifikation in Konsumenten-Projekt |
-| Release | Review, Changelog, manuelle Freigabe, NuGet-Publish |
+| Release | Changelog, manuelle Freigabe, NuGet-Publish |
 
 Details zu Testfällen: [`SOWI.vCard.Architecture.md`](SOWI.vCard.Architecture.md) Abschnitt 11.
 
@@ -273,12 +275,15 @@ flowchart LR
     MAIN --> ART
 ```
 
-| Regel | Vorgabe |
-| ----- | ------- |
-| Direkte Commits auf `main` | Nicht erlaubt |
-| Pull Request | Erforderlich |
-| Erfolgreicher Build + Tests | Erforderlich |
-| Mindestens ein Review | Erforderlich |
+| Regel | Technisch erzwungen | Vorgabe |
+| ----- | ------------------- | ------- |
+| Direkte Commits auf `main` | Ja | Nicht erlaubt |
+| Pull Request | Ja | Erforderlich |
+| Erfolgreicher Build + Tests (CI `build`) | Ja | Erforderlich |
+| Review-Konversationen gelöst | Ja | Erforderlich |
+| Kein Force-Push / kein Löschen von `main` | Ja | Erforderlich |
+| Code Review (Approval) | Nein | Empfohlen bei Team; bei externen PRs prüft der Maintainer vor dem Merge |
+| Branch up-to-date vor Merge | Nein | Optional; bei parallelen PRs oder mehreren Maintainers wieder aktivieren |
 
 ---
 
@@ -315,8 +320,7 @@ flowchart TD
     REPO[Repository]
     PR[Pull Request]
     BUTE[Build + Tests]
-    BUILD{Erfolgreich?}
-    REVIEW{Review OK?}
+    BUILD{CI erfolgreich?}
     MAIN[main]
     REWORK[Überarbeiten]
 
@@ -326,10 +330,7 @@ flowchart TD
     BUTE --> BUILD
 
     BUILD -->|Nein| REWORK
-    BUILD -->|Ja| REVIEW
-
-    REVIEW -->|Nein| REWORK
-    REVIEW -->|Ja| MAIN
+    BUILD -->|Ja| MAIN
 
     REWORK --> FEAT
 ```
@@ -343,8 +344,8 @@ flowchart TD
    ```
 
 3. Pull Request nach `main` erstellen.
-4. CI führt Build und Tests aus.
-5. Nach Review: Merge nach `main`.
+4. CI führt Build und Tests aus (Required Check `build`).
+5. Nach grünem CI: Merge nach `main` (bei externen PRs vorher manuell prüfen).
 6. Main-Pipeline erzeugt versioniertes NuGet-Artefakt.
 
 **Build-Prozess**
@@ -494,55 +495,37 @@ git push origin feature/neue-property
 **Pull Request nach `main`**
 
 1. Pull Request von `feature/*`, `fix/*` oder `hotfix/*` nach `main` erstellen.
-2. CI führt Build und Tests aus.
-3. Review durchführen.
-4. Nach Freigabe: Merge nach `main`.
+2. CI führt Build und Tests aus (Check `build` muss grün sein).
+3. Offene Review-Konversationen auflösen.
+4. Merge nach `main` (bei Beiträgen von aussen: vorher manuell prüfen).
 
 ---
 
 ### Anhang B – Pipelines (GitHub Actions)
 
-Technische Referenz für die geplante Implementierung.
+Technische Referenz der implementierten Pipelines (`.github/workflows/ci.yml`, `release.yml`).
 
-**Pull-Request-Pipeline** (`.github/workflows/ci-pr.yml`)
+**CI-Pipeline** (`.github/workflows/ci.yml`)
 
-Auslöser: Pull Request nach `main`
+Auslöser: Pull Request nach `main` sowie Push/Merge nach `main`
 
 ```mermaid
 flowchart LR
-    PR[Pull Request]
+    TRIGGER[PR oder Push main]
     CHECKOUT[Checkout]
     RESTORE[Restore]
     BUILD[Build Release]
     TEST[Tests]
+    PACK[Pack + Artefakt]
 
-    PR --> CHECKOUT
-    CHECKOUT --> RESTORE
-    RESTORE --> BUILD
-    BUILD --> TEST
-```
-
-**Main-Pipeline** (`.github/workflows/ci-main.yml`)
-
-Auslöser: Push/Merge nach `main`
-
-```mermaid
-flowchart LR
-    MAIN[main]
-    CHECKOUT[Checkout]
-    RESTORE[Restore]
-    BUILD[Build Release]
-    TEST[Tests]
-    PACK[dotnet pack]
-    ART[Artefakt]
-
-    MAIN --> CHECKOUT
+    TRIGGER --> CHECKOUT
     CHECKOUT --> RESTORE
     RESTORE --> BUILD
     BUILD --> TEST
     TEST --> PACK
-    PACK --> ART
 ```
+
+Pack und Artefakt-Upload nur bei Push auf `main` (nicht bei Pull Requests).
 
 **Release-Pipeline** (`.github/workflows/release.yml`)
 
@@ -560,7 +543,7 @@ flowchart LR
     PUSH --> NUGET
 ```
 
-**Beispiel: Pull-Request- und Main-Workflow**
+**Beispiel: CI-Workflow (Auszug)**
 
 ```yaml
 name: CI
@@ -658,7 +641,7 @@ flowchart TD
 
 1. `hotfix/*` von `main` erstellen.
 2. Korrektur und Tests (inkl. betroffener Fixture).
-3. Pull Request nach `main`, Review, Merge.
+3. Pull Request nach `main`, CI grün, Merge.
 4. Neues Paket mit neuer Datums-/Revisionsversion packen.
 5. Veröffentlichung; fehlerhafte Version auf nuget.org deprecaten.
 
@@ -673,7 +656,7 @@ flowchart TD
 | 1 | `Directory.Build.props` Versionierung | Erledigt |
 | 2 | Testprojekt mit xUnit, coverlet | Erledigt |
 | 3 | NuGet-Metadaten in `.csproj` | Erledigt |
-| 4 | Branch Protection auf GitHub konfigurieren | Offen |
+| 4 | Branch Protection auf GitHub konfigurieren | Skript bereitgestellt (einmalig anwenden) |
 | 5 | Trusted Publishing auf nuget.org + Variable `NUGET_USER` | Erledigt |
 | 6 | CI-Pipeline (`.github/workflows/ci.yml`) | Erledigt |
 | 7 | Release-Pipeline mit Trusted Publishing | Erledigt |
@@ -688,6 +671,72 @@ flowchart TD
 3. Erster Release-Test (Workflow `Release`)
 4. GitHub Release / Changelog
 5. Dependabot / Security Scan
+
+---
+
+### Anhang E – Branch Protection (`main`)
+
+Branch Protection wird auf GitHub als **Repository Ruleset** umgesetzt (nicht als Datei im Repository selbst). Die Konfiguration liegt versioniert unter `scripts/github/` und wird per Skript auf GitHub angewendet.
+
+**Auslegung:** Solo-Maintainer, öffentliches Repository. Technische Qualitätssicherung über PR + CI; keine Review-Approval-Pflicht und kein Up-to-date-Zwang vor dem Merge.
+
+**Aktive Regeln (technisch erzwungen)**
+
+| Regel | Umsetzung im Ruleset |
+| ----- | -------------------- |
+| Keine direkten Commits auf `main` | `pull_request` |
+| Pull Request erforderlich | `pull_request` |
+| Build + Tests erfolgreich | Required Status Check `build` (Job in `ci.yml`) |
+| Review-Konversationen gelöst | `required_review_thread_resolution: true` |
+| Kein Force-Push | `non_fast_forward` |
+| Branch nicht löschbar | `deletion` |
+
+**Bewusst nicht erzwungen**
+
+| Regel | Umsetzung im Ruleset | Begründung |
+| ----- | -------------------- | ---------- |
+| Review-Approval | `required_approving_review_count: 0` | Solo-Maintainer; Merge durch Maintainer ersetzt formales Approval |
+| Branch up-to-date | `strict_required_status_checks_policy: false` | Weniger Reibung; CI auf `main` nach Merge verifiziert den Stand |
+
+**Dateien**
+
+| Datei | Zweck |
+| ----- | ----- |
+| `scripts/github/branch-protection-ruleset.json` | Ruleset-Definition (GitHub REST API) |
+| `scripts/github/Apply-BranchProtection.ps1` | Idempotentes Anwenden (Create oder Update) |
+
+**Einmalige Anwendung**
+
+```powershell
+# GitHub CLI installieren (falls nötig)
+winget install GitHub.cli
+
+# Anmelden (Repository-Admin erforderlich)
+gh auth login
+
+# Ruleset auf GitHub anwenden
+.\scripts\github\Apply-BranchProtection.ps1
+```
+
+Trockenlauf ohne Änderung:
+
+```powershell
+.\scripts\github\Apply-BranchProtection.ps1 -WhatIf
+```
+
+**Verifikation**
+
+1. GitHub → Repository → **Settings** → **Rules** → **Rulesets** → `SOWI.vCard main` ist aktiv.
+2. Direkter Push auf `main` wird abgelehnt.
+3. Pull Request ohne grünen Check `build` ist nicht mergebar.
+4. Pull Request mit offenen, ungelösten Review-Konversationen ist nicht mergebar.
+5. Force-Push und Löschen von `main` sind blockiert.
+
+**Hinweise**
+
+- Der Status-Check-Name `build` entspricht dem Job-Namen in `.github/workflows/ci.yml`. Nach der ersten CI-Ausführung muss der Name in den GitHub-Einstellungen mit dem angezeigten Check übereinstimmen (bei Abweichung `branch-protection-ruleset.json` anpassen und Skript erneut ausführen).
+- Ab zweitem Maintainer: `required_approving_review_count` auf `1` und ggf. `strict_required_status_checks_policy` auf `true` setzen.
+- Manuelle Alternative: Settings → Rules → Rulesets → JSON aus `branch-protection-ruleset.json` importieren.
 
 ---
 
