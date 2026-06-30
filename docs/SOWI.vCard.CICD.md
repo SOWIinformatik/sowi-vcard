@@ -283,7 +283,7 @@ flowchart LR
 | Review-Konversationen gelöst | Ja | Erforderlich |
 | Kein Force-Push / kein Löschen von `main` | Ja | Erforderlich |
 | Code Review (Approval) | Nein | Empfohlen bei Team; bei externen PRs prüft der Maintainer vor dem Merge |
-| Branch up-to-date vor Merge | Nein | Optional; bei parallelen PRs oder mehreren Maintainers wieder aktivieren |
+| Branch up-to-date vor Merge | Nein | Optional; bei parallelen PRs oder mehreren Maintainer wieder aktivieren |
 
 ---
 
@@ -656,7 +656,7 @@ flowchart TD
 | 1 | `Directory.Build.props` Versionierung | Erledigt |
 | 2 | Testprojekt mit xUnit, coverlet | Erledigt |
 | 3 | NuGet-Metadaten in `.csproj` | Erledigt |
-| 4 | Branch Protection auf GitHub konfigurieren | Skript bereitgestellt (einmalig anwenden) |
+| 4 | Branch Protection auf GitHub konfigurieren | Erledigt |
 | 5 | Trusted Publishing auf nuget.org + Variable `NUGET_USER` | Erledigt |
 | 6 | CI-Pipeline (`.github/workflows/ci.yml`) | Erledigt |
 | 7 | Release-Pipeline mit Trusted Publishing | Erledigt |
